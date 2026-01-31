@@ -1,0 +1,123 @@
+================================================================================
+                    PRINT SERVER - HOW TO RUN
+================================================================================
+
+ISSUE WITH .EXE VERSION:
+The compiled PrintServer.exe has issues with native modules (node-printer).
+This is a known limitation with pkg when bundling native Node.js addons.
+
+SOLUTION: Run from Node.js source code (RECOMMENDED)
+Since Node.js is already installed on your system, this is the best approach.
+
+================================================================================
+METHOD 1: SIMPLE START (FOR TESTING)
+================================================================================
+
+Double-click:
+  START_SERVER.bat
+
+Or manually:
+  node printServer.js
+
+Server will run in a console window.
+Close the window to stop the server.
+
+================================================================================
+METHOD 2: AUTO-START ON LOGIN (RECOMMENDED)
+================================================================================
+
+1. Right-click: INSTALL_AUTO_START_SOURCE.bat
+2. Select: "Run as Administrator"
+3. Done!
+
+Server will:
+  ✓ Start automatically when you log in
+  ✓ Run in background (no console window)
+  ✓ Firewall configured automatically
+
+To uninstall:
+  Delete: %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\PrintServer.vbs
+
+================================================================================
+METHOD 3: WINDOWS SERVICE (ADVANCED)
+================================================================================
+
+For production environments, you can install as a Windows service using NSSM
+or Task Scheduler. Contact support for setup assistance.
+
+================================================================================
+VERIFY IT'S RUNNING
+================================================================================
+
+Open browser and visit:
+
+Health Check:
+  http://localhost:9191
+  Should show: "Print Service with Logo Support is running"
+
+Status:
+  http://localhost:9191/status
+  Shows printer status
+
+List Printers:
+  http://localhost:9191/printers
+  Lists all installed printers
+
+Test Print:
+  http://localhost:9191/test-print
+  Sends test print to RP3160
+
+================================================================================
+NETWORK ACCESS
+================================================================================
+
+The server is accessible from other devices on your network:
+
+  http://192.168.29.209:9191
+
+Make sure Windows Firewall allows port 9191.
+
+================================================================================
+DEPLOYMENT TO OTHER COMPUTERS
+================================================================================
+
+OPTION A: If target computer has Node.js installed
+  1. Copy entire printer-server folder
+  2. Run: npm install (one time)
+  3. Run: START_SERVER.bat
+
+OPTION B: If target computer does NOT have Node.js
+  1. Install Node.js from: https://nodejs.org
+  2. Copy entire printer-server folder
+  3. Run: npm install (one time)
+  4. Run: START_SERVER.bat
+
+Note: The .exe deployment currently has issues. Use Node.js source instead.
+
+================================================================================
+FIXING THE .EXE (FOR DEVELOPERS)
+================================================================================
+
+The issue is that pkg doesn't properly bundle native modules.
+
+Potential fixes:
+  1. Use electron-builder instead of pkg
+  2. Use nexe with proper native module support
+  3. Create Node.js installer that installs Node.js + source
+  4. Use Docker container (for Windows containers)
+
+For now, source code deployment is the recommended approach.
+
+================================================================================
+CURRENT STATUS
+================================================================================
+
+✅ Server is running: http://localhost:9191
+✅ Network access: http://192.168.29.209:9191
+✅ Printer configured: RP3160
+
+To stop the server:
+  - Close the console window (if running manually)
+  - Or kill the Node.js process from Task Manager
+
+================================================================================

@@ -1,0 +1,360 @@
+================================================================================
+              PRINT SERVER - BUILD & DEPLOYMENT GUIDE
+================================================================================
+
+This guide explains how to create standalone executables and installers
+that work on ANY Windows device WITHOUT requiring Node.js.
+
+================================================================================
+OVERVIEW
+================================================================================
+
+The compiled .exe from pkg doesn't work due to native module issues.
+
+SOLUTION: Create a portable bundle with Node.js embedded.
+
+Three deployment options:
+  1. Portable Bundle (folder) - Easiest, most reliable
+  2. Inno Setup Installer (.exe) - Professional installer
+  3. ZIP Package - For email/download distribution
+
+================================================================================
+OPTION 1: PORTABLE BUNDLE (RECOMMENDED)
+================================================================================
+
+Creates a self-contained folder that works on any Windows PC.
+
+STEPS:
+
+1. Open Command Prompt or PowerShell in project folder
+
+2. Run:
+   BUILD_EXECUTABLE.bat
+
+3. Select option 1 (Portable Bundle)
+
+4. Wait for download and build to complete (~5 minutes)
+
+5. Result:
+   PrintServer-Portable/  (~100MB)
+   ├── nodejs/           (Node.js portable)
+   ├── node_modules/     (Dependencies)
+   ├── printServer.js
+   ├── Start-PrintServer.bat
+   ├── Stop-PrintServer.bat
+   └── README.txt
+
+DEPLOYMENT:
+
+Copy the PrintServer-Portable folder to:
+  - USB drive
+  - Network share
+  - Target computer
+
+On target computer:
+  - Double-click Start-PrintServer.bat
+  - Done!
+
+NO INSTALLATION REQUIRED!
+
+================================================================================
+OPTION 2: INNO SETUP INSTALLER (PROFESSIONAL)
+================================================================================
+
+Creates a professional Windows installer (.exe) with:
+  ✓ Installation wizard
+  ✓ Start menu shortcuts
+  ✓ Desktop icon (optional)
+  ✓ Auto-start configuration
+  ✓ Firewall configuration
+  ✓ Uninstaller
+
+REQUIREMENTS:
+
+1. Download and install Inno Setup:
+   https://jrsoftware.org/isinfo.php
+
+2. Build the Portable Bundle first (Option 1 above)
+
+STEPS:
+
+1. Open BUILD_EXECUTABLE.bat
+
+2. Select option 2 (Inno Setup Installer)
+
+3. OR manually:
+   - Right-click: installer-script.iss
+   - Open with: Inno Setup Compiler
+   - Click: Build → Compile
+
+4. Result:
+   installer-output/PrintServer-Setup.exe (~100MB)
+
+DEPLOYMENT:
+
+Distribute PrintServer-Setup.exe to users:
+  - Email
+  - Download link
+  - USB drive
+  - Network share
+
+Users run PrintServer-Setup.exe:
+  - Installation wizard guides them
+  - Auto-configures everything
+  - Creates shortcuts
+  - Starts server automatically
+
+================================================================================
+OPTION 3: ZIP PACKAGE (SIMPLE DISTRIBUTION)
+================================================================================
+
+Creates a ZIP file for easy distribution.
+
+STEPS:
+
+1. Build Portable Bundle first (Option 1)
+
+2. Run BUILD_EXECUTABLE.bat
+
+3. Select option 3 (ZIP Package)
+
+4. Result:
+   PrintServer-Portable.zip (~100MB)
+
+DEPLOYMENT:
+
+Distribute ZIP file via:
+  - Email
+  - Cloud storage (Google Drive, Dropbox)
+  - Download link
+  - FTP/HTTP server
+
+Users:
+  1. Download ZIP file
+  2. Extract to any folder
+  3. Run Start-PrintServer.bat
+
+================================================================================
+AUTOMATED BUILD SCRIPT
+================================================================================
+
+For advanced users, use PowerShell script directly:
+
+PowerShell Command:
+  .\Build-PortableBundle.ps1
+
+Options:
+  -NodeVersion "20.11.0"    (Specify Node.js version)
+  -OutputDir "MyBundle"     (Custom output folder)
+  -SkipNodeDownload         (Use existing nodejs folder)
+
+Example:
+  .\Build-PortableBundle.ps1 -NodeVersion "20.15.0" -OutputDir "PrintServer"
+
+================================================================================
+TESTING THE BUILD
+================================================================================
+
+Before deploying, test the bundle:
+
+1. Navigate to PrintServer-Portable folder
+
+2. Run: Start-PrintServer.bat
+
+3. Verify:
+   ✓ Server starts without errors
+   ✓ Browser opens to http://localhost:9191
+   ✓ Status page shows printer: http://localhost:9191/status
+   ✓ Test print works: http://localhost:9191/test-print
+
+4. Test on another PC (without Node.js installed):
+   ✓ Copy folder to USB
+   ✓ Run on different PC
+   ✓ Verify it works without installation
+
+================================================================================
+CUSTOMIZATION
+================================================================================
+
+CHANGE PRINTER NAME:
+
+Before building:
+  1. Edit: printServer.js
+  2. Line 27: const PRINTER_NAME = "YOUR_PRINTER";
+  3. Save
+  4. Rebuild bundle
+
+CHANGE PORT:
+
+Before building:
+  1. Edit: printServer.js
+  2. Line 24: const PORT = 9191;
+  3. Save
+  4. Rebuild bundle
+
+ADD CUSTOM ICON:
+
+For Inno Setup installer:
+  1. Create/download .ico file
+  2. Save as: icon.ico
+  3. Rebuild installer
+  4. Installer will use your icon
+
+================================================================================
+DEPLOYMENT SCENARIOS
+================================================================================
+
+SCENARIO 1: Single Computer (Personal Use)
+  Method: Portable Bundle
+  Copy folder to C:\PrintServer
+  Run Start-PrintServer.bat
+  Add to startup (optional)
+
+SCENARIO 2: Multiple Computers (Small Business)
+  Method: ZIP Package
+  Upload to network share
+  Users download and extract
+  Run Start-PrintServer.bat
+
+SCENARIO 3: Enterprise Deployment (IT Department)
+  Method: Inno Setup Installer
+  Deploy via Group Policy or SCCM
+  Silent install: PrintServer-Setup.exe /VERYSILENT
+  Auto-configures everything
+
+SCENARIO 4: Remote Locations
+  Method: ZIP Package
+  Email or cloud storage link
+  Users download, extract, run
+  Remote support via TeamViewer/AnyDesk
+
+================================================================================
+FILE SIZES
+================================================================================
+
+Portable Bundle:     ~100 MB
+ZIP Package:         ~100 MB (compressed)
+Inno Setup Installer: ~100 MB (self-extracting)
+
+Node.js Runtime:     ~30 MB
+Application:         ~5 MB
+Dependencies:        ~65 MB
+
+================================================================================
+TROUBLESHOOTING BUILD PROCESS
+================================================================================
+
+Problem: "PowerShell script won't run"
+Solution: Run as Administrator:
+          PowerShell.exe -ExecutionPolicy Bypass -File Build-PortableBundle.ps1
+
+Problem: "Node.js download fails"
+Solution: 1. Check internet connection
+          2. Download manually from https://nodejs.org
+          3. Extract to PrintServer-Portable\nodejs\
+
+Problem: "node_modules not found"
+Solution: Run 'npm install' in project folder first
+
+Problem: "Inno Setup not found"
+Solution: Download from https://jrsoftware.org/isinfo.php
+
+Problem: Build fails with permissions error
+Solution: Run Command Prompt as Administrator
+
+================================================================================
+DISTRIBUTION CHECKLIST
+================================================================================
+
+Before distributing, verify:
+
+[ ] Portable bundle builds successfully
+[ ] Start-PrintServer.bat works
+[ ] Server starts and responds on http://localhost:9191
+[ ] Printer is detected
+[ ] Test print works
+[ ] README.txt is included
+[ ] Tested on clean Windows PC (without Node.js)
+[ ] Firewall prompt appears (expected behavior)
+[ ] Server accessible from network (if needed)
+[ ] Stop-PrintServer.bat stops the server
+[ ] No errors in console
+
+For Installer:
+[ ] Installer runs without errors
+[ ] Installation path is correct
+[ ] Start menu shortcuts work
+[ ] Desktop icon created (if selected)
+[ ] Server auto-starts (if selected)
+[ ] Firewall configured (if selected)
+[ ] Uninstaller works
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. BUILD:
+   Run: BUILD_EXECUTABLE.bat
+   Select option 1 (Portable Bundle)
+   Wait for completion
+
+2. TEST:
+   cd PrintServer-Portable
+   Start-PrintServer.bat
+   Verify everything works
+
+3. DEPLOY:
+   Copy to USB or network share
+   Distribute to users
+   Provide README.txt for instructions
+
+4. SUPPORT:
+   Monitor for issues
+   Update printer name if needed
+   Rebuild and redeploy if necessary
+
+================================================================================
+ADVANCED: SILENT INSTALLATION
+================================================================================
+
+For IT departments deploying via scripts:
+
+Inno Setup Silent Install:
+  PrintServer-Setup.exe /VERYSILENT /NORESTART /TASKS="autostart,firewall"
+
+Parameters:
+  /VERYSILENT   - No UI, no messages
+  /SILENT       - Progress bar only
+  /NORESTART    - Don't restart computer
+  /TASKS        - Comma-separated task list
+  /DIR="path"   - Custom installation directory
+
+Example:
+  PrintServer-Setup.exe /VERYSILENT /DIR="C:\PrintServer" /TASKS="autostart,firewall"
+
+Check installation success:
+  IF EXIST "C:\Program Files\Print Server\Start-PrintServer.bat" (
+    echo Installation successful
+  )
+
+================================================================================
+SUPPORT & MAINTENANCE
+================================================================================
+
+Updates:
+  1. Modify source code
+  2. Rebuild bundle
+  3. Distribute new version
+  4. Users replace old folder with new one
+
+Version Control:
+  - Update version in package.json
+  - Update version in installer-script.iss
+  - Include version in README.txt
+
+Logs:
+  - Server console output
+  - Windows Event Viewer (for service installs)
+  - Network traffic logs (if needed)
+
+================================================================================

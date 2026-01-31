@@ -1,0 +1,28 @@
+{
+  "name": "print-server",
+  "version": "1.0.0",
+  "description": "Print Server with Logo Conversion",
+  "main": "printServer.js",
+  "bin": "printServer.js",
+  "scripts": {
+    "start": "node printServer.js",
+    "build": "pkg . --targets node18-win-x64 --output dist/PrintServer.exe --compress GZip",
+    "build-x86": "pkg . --targets node18-win-x86 --output dist/PrintServer-x86.exe --compress GZip"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/@thiagoelg/node-printer/**/*",
+      "node_modules/sharp/**/*"
+    ],
+    "outputPath": "dist"
+  },
+  "dependencies": {
+    "@thiagoelg/node-printer": "^0.6.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  }
+}

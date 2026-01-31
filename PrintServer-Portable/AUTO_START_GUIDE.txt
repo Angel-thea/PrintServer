@@ -1,0 +1,261 @@
+================================================================================
+              PRINT SERVER - AUTO-START CONFIGURATION GUIDE
+================================================================================
+
+By default, Print Server does NOT start automatically.
+You need to run Start-PrintServer.bat manually each time.
+
+This guide shows you how to make it auto-start on Windows startup.
+
+================================================================================
+OPTION 1: AUTO-START ON USER LOGIN (RECOMMENDED FOR WORKSTATIONS)
+================================================================================
+
+WHAT IT DOES:
+  - Starts Print Server when YOU log in to Windows
+  - Runs in background (no console window)
+  - Easy to install and uninstall
+
+WHEN TO USE:
+  - Personal computers
+  - Workstations where you always log in
+  - Single-user systems
+
+HOW TO INSTALL:
+
+  1. Double-click: INSTALL_AUTO_START.bat
+  2. Press any key to confirm
+  3. Done!
+
+  Next time you log in, Print Server starts automatically.
+
+HOW TO UNINSTALL:
+
+  1. Double-click: UNINSTALL_AUTO_START.bat
+  2. Done!
+
+TECHNICAL DETAILS:
+  - Creates VBScript in Startup folder
+  - Location: %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+  - Runs when user logs in
+  - No admin rights required
+
+================================================================================
+OPTION 2: WINDOWS SERVICE (RECOMMENDED FOR SERVERS)
+================================================================================
+
+WHAT IT DOES:
+  - Starts Print Server when Windows boots
+  - Runs BEFORE any user logs in
+  - Runs as SYSTEM account
+  - Most reliable option
+
+WHEN TO USE:
+  - Server computers
+  - Shared workstations (multiple users)
+  - Systems that need 24/7 operation
+  - Production environments
+
+HOW TO INSTALL:
+
+  1. Right-click: INSTALL_WINDOWS_SERVICE.bat
+  2. Select "Run as Administrator"
+  3. Press any key to confirm
+  4. Choose to start now (Y) or later (N)
+  5. Done!
+
+  Print Server now starts automatically on every Windows boot.
+
+HOW TO UNINSTALL:
+
+  1. Right-click: UNINSTALL_WINDOWS_SERVICE.bat
+  2. Select "Run as Administrator"
+  3. Done!
+
+TECHNICAL DETAILS:
+  - Uses Task Scheduler (built-in to Windows)
+  - Task name: "PrintServer"
+  - Runs on: System startup
+  - Account: SYSTEM
+  - Priority: Highest
+  - Requires admin rights to install/uninstall
+
+MANAGE SERVICE:
+
+  Check status:
+    schtasks /Query /TN "PrintServer"
+
+  Start manually:
+    schtasks /Run /TN "PrintServer"
+
+  Stop manually:
+    schtasks /End /TN "PrintServer"
+
+================================================================================
+OPTION 3: MANUAL START (DEFAULT)
+================================================================================
+
+WHAT IT DOES:
+  - You start Print Server manually when needed
+  - Server stops when you close the console window
+  - No automatic startup
+
+WHEN TO USE:
+  - Testing and development
+  - Occasional use
+  - When you want full control
+
+HOW TO USE:
+
+  Start: Double-click Start-PrintServer.bat
+  Stop:  Double-click Stop-PrintServer.bat
+
+================================================================================
+COMPARISON
+================================================================================
+
+Feature                  | Manual | Auto-Start | Service
+-------------------------+--------+------------+--------
+Starts automatically     | No     | On login   | On boot
+Admin rights required    | No     | No         | Yes
+Runs before login        | No     | No         | Yes
+Shows console window     | Yes    | No         | No
+Easy to stop             | Yes    | Medium     | Medium
+Best for                 | Testing| Workstation| Server
+
+================================================================================
+WHICH ONE SHOULD I USE?
+================================================================================
+
+CHOOSE AUTO-START ON LOGIN IF:
+  ✓ You use a workstation or personal computer
+  ✓ You always log in to Windows
+  ✓ You don't need it running before login
+  ✓ You want easy installation (no admin rights)
+
+CHOOSE WINDOWS SERVICE IF:
+  ✓ You run a server or shared computer
+  ✓ You need 24/7 operation
+  ✓ You want it running even before login
+  ✓ You need maximum reliability
+  ✓ Multiple users access the same computer
+
+CHOOSE MANUAL START IF:
+  ✓ You're testing or developing
+  ✓ You only use it occasionally
+  ✓ You want full control over when it runs
+
+================================================================================
+TESTING AUTO-START
+================================================================================
+
+AFTER INSTALLING AUTO-START ON LOGIN:
+  1. Log out of Windows
+  2. Log back in
+  3. Wait 10 seconds
+  4. Open browser: http://localhost:9191
+  5. Should see "Print Service with Logo Support is running"
+
+AFTER INSTALLING WINDOWS SERVICE:
+  1. Restart your computer
+  2. Wait for Windows to boot (don't log in yet)
+  3. Log in
+  4. Open browser: http://localhost:9191
+  5. Should see "Print Service with Logo Support is running"
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: Auto-start doesn't work
+Solution: 1. Check if PrintServer.vbs exists in Startup folder:
+             %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+          2. Check paths in the VBScript are correct
+          3. Reinstall using INSTALL_AUTO_START.bat
+
+Problem: Windows Service doesn't start
+Solution: 1. Open Task Scheduler (taskschd.msc)
+          2. Find "PrintServer" task
+          3. Check "Last Run Result" for errors
+          4. Check task is Enabled
+          5. Try running manually: schtasks /Run /TN "PrintServer"
+
+Problem: Port 9191 already in use
+Solution: Another instance is running. Stop it first:
+          - Run Stop-PrintServer.bat
+          - Or: taskkill /F /IM node.exe
+
+Problem: Server starts but can't access from browser
+Solution: 1. Check Windows Firewall allows port 9191
+          2. Try: http://localhost:9191
+          3. Check server is actually running: netstat -ano | findstr :9191
+
+================================================================================
+REMOVING AUTO-START
+================================================================================
+
+TO REMOVE AUTO-START ON LOGIN:
+  Run: UNINSTALL_AUTO_START.bat
+
+TO REMOVE WINDOWS SERVICE:
+  Right-click UNINSTALL_WINDOWS_SERVICE.bat
+  Select "Run as Administrator"
+
+TO STOP SERVER MANUALLY:
+  Run: Stop-PrintServer.bat
+
+================================================================================
+NETWORK ACCESS WITH AUTO-START
+================================================================================
+
+If you configured auto-start and need network access:
+
+1. Configure Windows Firewall:
+   - Control Panel → Windows Firewall
+   - Allow an app → Add PrintServer
+   - Or allow port 9191
+
+2. Find your IP address:
+   - Run: ipconfig
+   - Look for IPv4 Address
+
+3. Access from other devices:
+   http://[YOUR-IP]:9191
+
+Example: http://192.168.29.209:9191
+
+================================================================================
+DEPLOYMENT WITH AUTO-START
+================================================================================
+
+When deploying to other computers:
+
+OPTION A: Install auto-start after copying
+  1. Copy PrintServer-Portable folder to target PC
+  2. Run INSTALL_AUTO_START.bat (for workstations)
+  3. Or INSTALL_WINDOWS_SERVICE.bat (for servers)
+
+OPTION B: Pre-configure before copying
+  1. Install auto-start on your computer
+  2. Copy entire PrintServer-Portable folder
+  3. Auto-start config copies with it
+  4. Works immediately on target PC
+
+NOTE: Windows Service option is better for enterprise deployment
+
+================================================================================
+CHECKING IF AUTO-START IS CONFIGURED
+================================================================================
+
+AUTO-START ON LOGIN:
+  Check if this file exists:
+  %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\PrintServer.vbs
+
+WINDOWS SERVICE:
+  Run command:
+  schtasks /Query /TN "PrintServer"
+
+  If configured, you'll see task details.
+  If not configured, you'll see "ERROR: The system cannot find the file specified."
+
+================================================================================

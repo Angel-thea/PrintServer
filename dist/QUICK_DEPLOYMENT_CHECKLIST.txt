@@ -1,0 +1,65 @@
+================================================================================
+                    QUICK DEPLOYMENT CHECKLIST
+================================================================================
+
+Use this checklist when deploying to each Windows device.
+
+================================================================================
+PRE-DEPLOYMENT (Do once)
+================================================================================
+
+[ ] Copy entire 'dist' folder to USB drive / network share
+[ ] Test PrintServer.exe works on your computer first
+[ ] Note your printer model name (for verification)
+
+================================================================================
+ON EACH TARGET DEVICE (5 minutes per device)
+================================================================================
+
+STEP 1: COPY FILES
+[ ] Copy entire dist folder to: C:\PrintServer
+[ ] Verify sharp/ folder is present
+
+STEP 2: INSTALL
+[ ] Right-click DEPLOY_TO_DEVICE.bat
+[ ] Select "Run as Administrator"
+[ ] Choose installation method:
+    [ ] Option 2: Auto-Start on Login (recommended for workstations)
+    [ ] Option 3: Windows Service (recommended for servers)
+
+STEP 3: VERIFY
+[ ] Open browser: http://localhost:9191
+[ ] Should see: "Print Service with Logo Support is running"
+[ ] Check status: http://localhost:9191/status
+[ ] Check printer listed: http://localhost:9191/printers
+[ ] Test print: http://localhost:9191/test-print
+
+STEP 4: FIREWALL (Only if network printing needed)
+[ ] Windows Firewall prompt appears → Click "Allow"
+[ ] OR manually configure port 9191
+
+STEP 5: DOCUMENT
+Device Name: _______________________
+IP Address:  _______________________
+Printer:     _______________________
+Status:      [ ] Working  [ ] Issues: _______________
+
+================================================================================
+COMMON ISSUES
+================================================================================
+
+Issue: "Cannot find module 'sharp'"
+Fix:   Ensure sharp/ folder is in C:\PrintServer
+
+Issue: No printer found
+Fix:   1. Check printer driver installed
+       2. Visit /printers to see printer name
+       3. If different from RP3160, needs rebuild
+
+Issue: Can't run as admin
+Fix:   Right-click → "Run as Administrator"
+
+Issue: Firewall blocks
+Fix:   Allow port 9191 in Windows Firewall
+
+================================================================================

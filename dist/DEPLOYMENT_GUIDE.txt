@@ -1,0 +1,198 @@
+================================================================================
+              PRINT SERVER - AUTO-START DEPLOYMENT GUIDE
+================================================================================
+
+This guide explains how to deploy the Print Server to run automatically
+on Windows startup on ANY Windows machine (even without Node.js).
+
+================================================================================
+WHAT'S IN THE PACKAGE
+================================================================================
+
+PrintServer.exe              - Main executable (41MB, Node.js bundled)
+sharp/                       - Image processing libraries (REQUIRED)
+INSTALL_SERVICE.bat          - Install as Windows Service (RECOMMENDED)
+UNINSTALL_SERVICE.bat        - Remove Windows Service
+SERVICE_STATUS.bat           - Check service status
+ADD_TO_STARTUP.bat           - Add to Startup folder (ALTERNATIVE)
+DEPLOYMENT_GUIDE.txt         - This file
+
+================================================================================
+METHOD 1: WINDOWS SERVICE (RECOMMENDED)
+================================================================================
+
+✅ Best for production environments
+✅ Runs in background (no console window)
+✅ Auto-starts on boot (before user login)
+✅ Auto-restarts if it crashes
+✅ Creates log files
+
+INSTALLATION STEPS:
+
+1. Copy the entire 'dist' folder to the target machine
+   Example: C:\PrintServer\
+
+2. Right-click INSTALL_SERVICE.bat
+   Select "Run as Administrator"
+
+3. Wait for installation to complete
+   The script will:
+   - Download NSSM (service manager) automatically
+   - Install PrintServer as a Windows Service
+   - Configure auto-start on boot
+   - Start the service immediately
+
+4. Verify it's running:
+   Open browser: http://localhost:9191
+
+DONE! The server will now start automatically every time Windows boots.
+
+LOGS:
+- C:\PrintServer\service.log (normal output)
+- C:\PrintServer\service-error.log (errors)
+
+UNINSTALL:
+- Right-click UNINSTALL_SERVICE.bat
+- Select "Run as Administrator"
+
+================================================================================
+METHOD 2: STARTUP FOLDER (SIMPLE ALTERNATIVE)
+================================================================================
+
+✅ Easier to install (no admin rights needed)
+✅ Good for testing or personal use
+❌ Shows console window on login
+❌ Only starts when user logs in
+❌ Doesn't auto-restart on crash
+
+INSTALLATION STEPS:
+
+1. Copy the entire 'dist' folder to the target machine
+   Example: C:\PrintServer\
+
+2. Double-click ADD_TO_STARTUP.bat
+
+3. The server will start automatically when you log in to Windows
+
+UNINSTALL:
+- Press Win+R
+- Type: shell:startup
+- Delete the "PrintServer" shortcut
+
+================================================================================
+FIREWALL CONFIGURATION
+================================================================================
+
+If accessing from network devices:
+
+1. Open Windows Defender Firewall
+2. Click "Advanced settings"
+3. Click "Inbound Rules" → "New Rule"
+4. Select "Port" → Next
+5. Select "TCP" → Specific local ports: 9191
+6. Select "Allow the connection"
+7. Apply to all profiles (Domain, Private, Public)
+8. Name: "Print Server"
+
+OR let Windows prompt you when first accessing from network.
+
+================================================================================
+UPDATING PRINTER NAME
+================================================================================
+
+The default printer is "RP3160". To change:
+
+OPTION A: Before building .exe
+1. Edit printServer.js line 27:
+   const PRINTER_NAME = "YOUR_PRINTER_NAME";
+2. Run: npm run build
+3. Deploy new dist folder
+
+OPTION B: Quick test
+1. Visit http://localhost:9191/printers
+2. Find your printer name
+3. Note: You'll need to rebuild with correct name
+
+================================================================================
+NETWORK ACCESS EXAMPLES
+================================================================================
+
+From the same machine:
+  http://localhost:9191
+
+From other devices on network:
+  http://192.168.1.100:9191
+  (Use the IP shown when server starts)
+
+Testing endpoints:
+  http://localhost:9191/ping         - Discovery
+  http://localhost:9191/status       - Printer status
+  http://localhost:9191/printers     - List printers
+  http://localhost:9191/test-print   - Test print
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PROBLEM: Service won't start
+SOLUTION: Check service-error.log for errors
+          Run SERVICE_STATUS.bat to check status
+
+PROBLEM: "Cannot find module 'sharp'"
+SOLUTION: Ensure 'sharp' folder is next to PrintServer.exe
+          Don't move .exe without the folder
+
+PROBLEM: Printer not found
+SOLUTION: Visit http://localhost:9191/printers
+          Update printer name and rebuild
+
+PROBLEM: Can't access from other devices
+SOLUTION: Check Windows Firewall (see above)
+          Verify both devices on same network
+
+PROBLEM: Service installed but not running
+SOLUTION: Run as Administrator: nssm.exe start PrintServer
+          Check logs for errors
+
+================================================================================
+DEPLOYMENT CHECKLIST
+================================================================================
+
+□ Copy entire dist folder (not just .exe)
+□ Run INSTALL_SERVICE.bat as Administrator
+□ Configure Windows Firewall for port 9191
+□ Test: http://localhost:9191
+□ Test: http://[IP]:9191 from another device
+□ Verify printer name at /printers endpoint
+□ Test print: http://localhost:9191/test-print
+□ Restart computer to verify auto-start
+
+================================================================================
+SYSTEM REQUIREMENTS
+================================================================================
+
+Operating System: Windows 7, 8, 10, 11 (64-bit)
+RAM: 100MB minimum
+Disk Space: 100MB
+Network: Optional (for remote printing)
+Printer: Thermal printer with driver installed
+
+NO Node.js required
+NO npm required
+NO Visual Studio required
+NO additional software required
+
+================================================================================
+TECHNICAL DETAILS
+================================================================================
+
+Service Name: PrintServer
+Display Name: Print Server
+Port: 9191
+Protocol: HTTP
+Architecture: x64
+Node Version: 18 (bundled)
+Auto-restart: Yes (5 second delay)
+Startup Type: Automatic
+
+================================================================================

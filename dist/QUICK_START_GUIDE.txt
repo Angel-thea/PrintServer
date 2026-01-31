@@ -1,0 +1,133 @@
+================================================================================
+                    PRINT SERVER - QUICK START GUIDE
+================================================================================
+
+Your IP Address: 192.168.29.209 (WiFi)
+Server Port: 9191
+
+================================================================================
+OPTION 1: AUTO-START ON BOOT (RECOMMENDED)
+================================================================================
+
+1. Right-click "INSTALL_AUTO_START.bat"
+2. Select "Run as Administrator"
+3. Done! Server will start automatically on every boot
+
+Uses: Windows Task Scheduler (built-in, no downloads needed)
+
+To Remove: Run "UNINSTALL_AUTO_START.bat" as Administrator
+
+================================================================================
+OPTION 2: MANUAL START (FOR TESTING)
+================================================================================
+
+Double-click: START_SERVER_MANUAL.bat
+
+The server will run in a window. Close the window to stop it.
+
+================================================================================
+OPTION 3: ADD TO STARTUP FOLDER (RUNS ON LOGIN)
+================================================================================
+
+Double-click: ADD_TO_STARTUP.bat
+
+Server will start when you log in (not before login).
+
+================================================================================
+CHECK IF SERVER IS RUNNING
+================================================================================
+
+Double-click: CHECK_STATUS.bat
+
+This will show:
+- If auto-start is configured
+- If server process is running
+- If HTTP endpoint is responding
+- Your network IP addresses
+
+================================================================================
+ACCESS THE SERVER
+================================================================================
+
+From this PC:
+  http://localhost:9191
+
+From other devices on your WiFi network:
+  http://192.168.29.209:9191
+
+Endpoints:
+  /              - Health check
+  /ping          - Discovery
+  /status        - Printer status
+  /printers      - List installed printers
+  /test-print    - Send test print
+  /print         - Print ESC/POS data
+  /convert-logo  - Convert logo to ESC/POS
+
+================================================================================
+FIREWALL SETUP (for network access)
+================================================================================
+
+When first accessing from another device, Windows may ask:
+  "Allow PrintServer.exe to communicate on networks?"
+  → Click "Allow access"
+
+Or manually:
+1. Windows Security → Firewall & network protection
+2. Advanced settings → Inbound Rules → New Rule
+3. Port → TCP → 9191 → Allow → All profiles → Name: "Print Server"
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: Script says "Run as Administrator"
+Solution: Right-click the .bat file, select "Run as Administrator"
+
+Problem: Can't access from other devices
+Solution: Check Windows Firewall, ensure both devices on same WiFi
+
+Problem: Server won't start
+Solution: Check if port 9191 is already in use:
+          netstat -ano | findstr :9191
+
+Problem: Printer not found
+Solution: Visit http://localhost:9191/printers to see installed printers
+          Update printer name in source code and rebuild
+
+================================================================================
+FILES INCLUDED
+================================================================================
+
+PrintServer.exe              - Main executable (41MB)
+sharp/                       - Image processing libraries (REQUIRED)
+
+Auto-Start Scripts:
+  INSTALL_AUTO_START.bat     - Install auto-start (RECOMMENDED)
+  UNINSTALL_AUTO_START.bat   - Remove auto-start
+  CHECK_STATUS.bat           - Check if running
+
+Manual Start:
+  START_SERVER_MANUAL.bat    - Run server manually
+  ADD_TO_STARTUP.bat         - Add to startup folder
+
+Documentation:
+  QUICK_START_GUIDE.txt      - This file
+  DEPLOYMENT_GUIDE.txt       - Detailed deployment guide
+
+Old Scripts (NSSM-based, ignore if NSSM download failed):
+  INSTALL_SERVICE.bat
+  UNINSTALL_SERVICE.bat
+  SERVICE_STATUS.bat
+
+================================================================================
+SYSTEM REQUIREMENTS
+================================================================================
+
+✅ Windows 7/8/10/11 (64-bit)
+✅ Thermal printer with driver installed
+❌ NO Node.js required
+❌ NO npm required
+❌ NO downloads required
+
+================================================================================

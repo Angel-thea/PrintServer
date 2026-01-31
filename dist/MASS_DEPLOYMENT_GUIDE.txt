@@ -1,0 +1,346 @@
+================================================================================
+          PRINT SERVER - MASS DEPLOYMENT GUIDE
+================================================================================
+
+This guide explains how to deploy Print Server to multiple Windows devices
+WITHOUT requiring Node.js installation.
+
+================================================================================
+WHAT YOU'RE DEPLOYING
+================================================================================
+
+A standalone Windows executable that:
+  ✓ Contains Node.js runtime (bundled inside PrintServer.exe)
+  ✓ Runs on any Windows 7/8/10/11 (64-bit)
+  ✓ Requires NO additional software
+  ✓ Requires NO Node.js installation
+  ✓ Requires NO npm installation
+
+================================================================================
+DEPLOYMENT PACKAGE CONTENTS
+================================================================================
+
+REQUIRED FILES (MUST DEPLOY TOGETHER):
+  PrintServer.exe       - Main executable (41MB, Node.js bundled)
+  sharp/                - Native image libraries (CRITICAL!)
+
+INSTALLATION HELPERS:
+  DEPLOY_TO_DEVICE.bat  - Interactive installer (NEW!)
+  INSTALL.bat           - Quick installer
+  INSTALL_SERVICE.bat   - Windows service installer
+  INSTALL_AUTO_START.bat - Auto-start installer
+  START_SERVER_MANUAL.bat - Manual start
+
+MANAGEMENT TOOLS:
+  CHECK_STATUS.bat      - Check if running
+  UNINSTALL_SERVICE.bat - Remove service
+  UNINSTALL_AUTO_START.bat - Remove auto-start
+
+DOCUMENTATION:
+  README.txt            - User guide
+  DEPLOYMENT_GUIDE.txt  - Detailed deployment
+  QUICK_START_GUIDE.txt - Quick reference
+
+TOTAL SIZE: ~41MB
+
+================================================================================
+DEPLOYMENT METHODS
+================================================================================
+
+METHOD 1: USB DRIVE / MANUAL COPY
+----------------------------------
+Best for: Small number of devices (1-10)
+
+Steps:
+  1. Copy entire 'dist' folder to USB drive
+  2. On each target device:
+     - Plug in USB
+     - Copy dist folder to C:\PrintServer
+     - Right-click DEPLOY_TO_DEVICE.bat → Run as Administrator
+     - Follow prompts
+
+Time: ~5 minutes per device
+
+
+METHOD 2: NETWORK SHARE
+------------------------
+Best for: Medium deployment (10-50 devices)
+
+Steps:
+  1. Share dist folder on network:
+     \\server\PrintServer
+
+  2. On each target device:
+     - Map network drive or access share
+     - Copy to local drive: C:\PrintServer
+     - Right-click DEPLOY_TO_DEVICE.bat → Run as Administrator
+
+Time: ~3 minutes per device
+
+
+METHOD 3: GROUP POLICY / SCCM / INTUNE
+---------------------------------------
+Best for: Large enterprise (50+ devices)
+
+Steps:
+  1. Create deployment package with dist folder
+  2. Configure Group Policy startup script:
+     Computer Configuration → Scripts → Startup
+     Add: \\server\PrintServer\INSTALL_SERVICE.bat
+
+  3. Deploy to target OUs
+  4. Devices auto-install on next reboot
+
+Time: Automated
+
+
+METHOD 4: POWERSHELL REMOTE DEPLOYMENT
+---------------------------------------
+Best for: IT admins with remote access
+
+See PowerShell script section below.
+
+================================================================================
+STEP-BY-STEP: MANUAL DEPLOYMENT
+================================================================================
+
+ON YOUR COMPUTER (One-time setup):
+-----------------------------------
+1. Navigate to printer-server/dist folder
+2. Verify all files are present (especially sharp/ folder)
+3. Test PrintServer.exe works:
+   - Double-click START_SERVER_MANUAL.bat
+   - Open http://localhost:9191
+   - Should see "Print Service... is running"
+   - Close the window
+
+4. Copy entire dist folder to:
+   - USB drive, OR
+   - Network share, OR
+   - Zip file for email/cloud transfer
+
+
+ON EACH TARGET DEVICE:
+----------------------
+1. Copy dist folder to target location:
+   Recommended: C:\PrintServer
+   Alternative: C:\Program Files\PrintServer
+
+2. Right-click DEPLOY_TO_DEVICE.bat
+   Select: "Run as Administrator"
+
+3. Choose installation method:
+   Option 1: Quick Start (for testing)
+   Option 2: Auto-Start on Login (workstations)
+   Option 3: Windows Service (servers/production)
+
+4. Wait for installation to complete
+
+5. Verify installation:
+   - Open browser: http://localhost:9191/status
+   - Should show printer status
+
+6. Test print (optional):
+   - Visit: http://localhost:9191/test-print
+   - Printer should print test receipt
+
+
+FIREWALL CONFIGURATION (if remote access needed):
+-------------------------------------------------
+If you need to print from OTHER devices on network:
+
+1. During installation, firewall rule is auto-created
+2. If manual configuration needed:
+   - Open Windows Firewall
+   - Allow port 9191 (TCP, Inbound)
+
+3. Verify firewall:
+   netsh advfirewall firewall show rule name="Print Server"
+
+================================================================================
+POWERSHELL REMOTE DEPLOYMENT SCRIPT
+================================================================================
+
+Save this as Deploy-PrintServer.ps1 and run from admin workstation:
+
+--------------------------------------------------------------------
+# Deploy Print Server to remote computers
+# Usage: .\Deploy-PrintServer.ps1 -Computers PC01,PC02,PC03
+
+param(
+    [string[]]$Computers,
+    [string]$SourcePath = "\\server\PrintServer"
+)
+
+foreach ($Computer in $Computers) {
+    Write-Host "Deploying to $Computer..." -ForegroundColor Cyan
+
+    try {
+        # Copy files
+        $DestPath = "\\$Computer\C$\PrintServer"
+
+        if (-not (Test-Path $DestPath)) {
+            New-Item -ItemType Directory -Path $DestPath -Force
+        }
+
+        Copy-Item -Path "$SourcePath\*" -Destination $DestPath -Recurse -Force
+
+        # Install as service remotely
+        Invoke-Command -ComputerName $Computer -ScriptBlock {
+            Start-Process -FilePath "C:\PrintServer\INSTALL_SERVICE.bat" -Wait -NoNewWindow
+        }
+
+        Write-Host "[OK] $Computer deployed successfully" -ForegroundColor Green
+
+    } catch {
+        Write-Host "[ERROR] $Computer failed: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+--------------------------------------------------------------------
+
+================================================================================
+CONFIGURATION FOR DIFFERENT PRINTERS
+================================================================================
+
+By default, the server is configured for printer: "RP3160"
+
+To check printer name on target device:
+  1. Visit: http://localhost:9191/printers
+  2. Look for your thermal printer in the list
+
+If printer name is different:
+  ⚠ You need to rebuild PrintServer.exe with correct printer name
+
+  Steps:
+  1. On development machine with Node.js:
+     - Edit printServer.js line 27: const PRINTER_NAME = "YOUR_PRINTER";
+     - Run: npm run build
+     - Redeploy the new dist folder
+
+  Alternative (Quick fix for testing):
+     - The /print endpoint accepts "printerName" parameter
+     - Client can specify printer on each request
+     - Not recommended for production
+
+================================================================================
+NETWORK PRINTING SETUP
+================================================================================
+
+To enable printing from OTHER devices (phones, tablets, PCs):
+
+1. Find server IP address:
+   - Run CHECK_STATUS.bat
+   - Note the Network URL (e.g., http://192.168.1.100:9191)
+
+2. On client devices:
+   - Configure app to use: http://[SERVER-IP]:9191/print
+
+3. Verify connectivity:
+   - From client browser: http://[SERVER-IP]:9191/status
+   - Should show printer status
+
+4. Firewall must allow port 9191
+
+================================================================================
+TROUBLESHOOTING DEPLOYMENT
+================================================================================
+
+Problem: "Cannot find module 'sharp'"
+Solution: Ensure sharp/ folder is in same directory as PrintServer.exe
+          DO NOT copy only the .exe file!
+
+Problem: PrintServer.exe won't start
+Solution: 1. Check Windows Event Viewer for errors
+          2. Verify printer driver is installed
+          3. Try manual start: START_SERVER_MANUAL.bat
+
+Problem: "Access Denied" when installing service
+Solution: Right-click script → Run as Administrator
+
+Problem: Can't access from network
+Solution: 1. Check Windows Firewall
+          2. Run: netsh advfirewall firewall add rule name="Print Server"
+             dir=in action=allow protocol=TCP localport=9191
+          3. Verify server is running: CHECK_STATUS.bat
+
+Problem: Different printer name
+Solution: Rebuild with correct printer name (see Configuration section)
+
+Problem: Service won't start automatically
+Solution: 1. Check Task Scheduler for "PrintServer" task
+          2. Verify task is enabled and set to run at startup
+          3. Check task runs as SYSTEM account
+
+================================================================================
+VERIFICATION CHECKLIST
+================================================================================
+
+After deployment on each device, verify:
+
+[ ] PrintServer.exe and sharp/ folder both present
+[ ] Server starts (manual or service)
+[ ] Can access http://localhost:9191
+[ ] Can access http://localhost:9191/status
+[ ] Printer shows as available
+[ ] Test print works: http://localhost:9191/test-print
+[ ] Firewall configured (if network access needed)
+[ ] Service/Auto-start configured (if needed)
+
+================================================================================
+MAINTENANCE
+================================================================================
+
+UPDATES:
+  1. Stop service: UNINSTALL_SERVICE.bat
+  2. Replace PrintServer.exe and sharp/ folder
+  3. Restart service: INSTALL_SERVICE.bat
+
+UNINSTALL:
+  - Service mode: UNINSTALL_SERVICE.bat
+  - Auto-start mode: UNINSTALL_AUTO_START.bat
+  - Manual: Just delete the folder
+
+LOGS:
+  - Console window (manual mode)
+  - Windows Event Viewer (service mode)
+  - Task Scheduler logs (auto-start mode)
+
+================================================================================
+SUPPORT INFORMATION
+================================================================================
+
+Typical deployment issues:
+
+1. Wrong printer name → Rebuild required
+2. Missing sharp folder → Copy complete dist folder
+3. Firewall blocks → Configure port 9191
+4. Permission issues → Run as Administrator
+
+For technical details, see:
+  - README.txt (user documentation)
+  - SYSTEM_DOCUMENTATION.md (technical architecture)
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+Minimum deployment files:
+  ✓ PrintServer.exe
+  ✓ sharp/ folder
+
+Recommended location:
+  C:\PrintServer
+
+Installation command:
+  DEPLOY_TO_DEVICE.bat (as Administrator)
+
+Verification URL:
+  http://localhost:9191/status
+
+Uninstall command:
+  UNINSTALL_SERVICE.bat or UNINSTALL_AUTO_START.bat
+
+Firewall port:
+  TCP 9191 (Inbound)
+
+================================================================================
